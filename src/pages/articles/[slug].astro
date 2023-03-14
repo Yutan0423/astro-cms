@@ -1,0 +1,32 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { newtClient } from '../../lib/newt'
+import type { Article } from '../../../types/article'
+
+export const getStaticPaths = async () => {
+  const { items: articles } = await newtClient.getContents<Article>({
+    appUid: 'blog2',
+    modelUid: 'article',
+    query: {
+      select: ['title', 'slug', 'body', 'coverImage'],
+    },
+  })
+
+  return articles.map((article) => ({
+    params: { slug: article.slug },
+    props: { article },
+  }))
+}
+
+const { article } = Astro.props
+---
+
+<Layout title="投稿詳細ページ" description="投稿詳細ページです">
+  <main>
+    <h2>{article.title}</h2>
+    <article set:html={article.body} />
+    <div>
+      <img src={article.coverImage.src} alt="画像です" />
+    </div>
+  </main>
+</Layout>
