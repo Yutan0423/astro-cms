@@ -33,7 +33,7 @@ const { article } = Astro.props
     <ul>
       <!-- こういう書き方ができる -->
       {article.tags.map((tag: Tag) => <li>{tag.name}</li>)}
-      <!-- JSを理解するには以下の書き方をまずは理解する -->
+      <!-- JSを理解するには以下の書き方をまずは理解しましょう -->
       <!-- {
         article.tags.map((tag: Tag) => {
           return <li>{tag.name}</li>
