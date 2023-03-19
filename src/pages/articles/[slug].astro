@@ -2,13 +2,14 @@
 import Layout from '../../layouts/Layout.astro'
 import { newtClient } from '../../lib/newt'
 import type { Article } from '../../../types/article'
+import type { Tag } from '../../../types/tag'
 
 export const getStaticPaths = async () => {
   const { items: articles } = await newtClient.getContents<Article>({
     appUid: 'blog2',
     modelUid: 'article',
     query: {
-      select: ['title', 'slug', 'body', 'coverImage'],
+      select: ['title', 'slug', 'body', 'coverImage', 'tags'],
     },
   })
 
@@ -18,12 +19,27 @@ export const getStaticPaths = async () => {
   }))
 }
 
+console.log(Astro.props.article)
+
+// 以下でHTMLに渡すpropsをパースしている
+// articleがそのまま変数としてHTMLで使える
 const { article } = Astro.props
 ---
 
 <Layout title="投稿詳細ページ" description="投稿詳細ページです">
   <main>
     <h2>{article.title}</h2>
+    <p>タグ</p>
+    <ul>
+      <!-- こういう書き方ができる -->
+      {article.tags.map((tag: Tag) => <li>{tag.name}</li>)}
+      <!-- JSを理解するには以下の書き方をまずは理解する -->
+      <!-- {
+        article.tags.map((tag: Tag) => {
+          return <li>{tag.name}</li>
+        })
+      } -->
+    </ul>
     <article set:html={article.body} />
     <div>
       <img src={article.coverImage.src} alt="画像です" />
