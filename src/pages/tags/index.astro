@@ -1,0 +1,31 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { newtClient } from '../../lib/newt'
+import type { Tag } from '../../../types/tag'
+
+console.log(Astro.url)
+
+const { items: tags } = await newtClient.getContents<Tag>({
+  appUid: 'blog2',
+  modelUid: 'tag',
+  query: {
+    select: ['_sys', 'name', 'slug'],
+  },
+})
+---
+
+<Layout title="Welcome to Astro." description="ewtとAstroを利用したブログです">
+  <main>
+    <ul>
+      {
+        tags.map((tag: Tag) => {
+          return (
+            <li>
+              <a href={`/tags/${tag.slug}`}>{tag.name}</a>
+            </li>
+          )
+        })
+      }
+    </ul>
+  </main>
+</Layout>

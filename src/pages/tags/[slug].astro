@@ -1,0 +1,66 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { newtClient } from '../../lib/newt'
+import type { Article } from '../../../types/article'
+import type { Tag } from '../../../types/tag'
+import { toAttributeString } from 'astro/dist/runtime/server/render/util'
+import { __astro_tag_component__ } from 'astro/dist/runtime/server'
+
+export const getStaticPaths = async () => {
+  const { items: tags } = await newtClient.getContents<Tag>({
+    appUid: 'blog2',
+    modelUid: 'tag',
+    query: {
+      select: ['_sys', 'name', 'slug'],
+    },
+  })
+  const { items: articles } = await newtClient.getContents<Article>({
+    appUid: 'blog2',
+    modelUid: 'article',
+    query: {
+      select: ['title', 'slug', 'body', 'tags', 'coverImage', 'author'],
+    },
+  })
+
+  // tags数だけparamsとpropsを返す、今回はdevelopersとcommunityの２つ
+  return tags.map((tag) => {
+    // 記事1つずつを取り出し、tag.slugに紐づく記事のみを取り出す
+    // 記事の中にもタグは複数紐づいているので、この中でフィルターをかける
+    const filteredArticles = articles.filter((article) => {
+      const articleTagSlugs = article.tags.map((tag) => tag.slug)
+      // indexOfメソッドは、引数内の要素（slug）があるかどうかを判別する。なければ-1を返すので、そうでない条件にする
+      return articleTagSlugs.indexOf(tag.slug) !== -1
+    })
+
+    // 動的ルーティングの場合、下記のようにURLに関係するparamsとHTMLに渡す変数propsを返す必要がある
+    // 下記の戻り値がAstroオブジェクトの中に格納される
+    return {
+      params: {
+        slug: tag.slug,
+      },
+      props: { articles: filteredArticles, tag: tag },
+    }
+  })
+}
+
+// 下記の記述でHTMLに変数を渡す（ちょっと理解してきた）
+const { articles, tag } = Astro.props
+---
+
+<Layout title="投稿詳細ページ" description="投稿詳細ページです">
+  <main>
+    <h2>{tag.slug}の記事一覧</h2>
+    <ul>
+      {articles.map((article: Article) => (
+        <>
+          <li>
+            <p>{article.title}</p>
+            <p>記事を書いた人</p>
+            <p><span>{article.author?.fullName}</span><img src={article.author?.profileImage?.src} alt=""></p>
+            <article set:html={article.author?.biography} />
+          </li>
+        </>
+      ))}
+    </ul>
+  </main>
+</Layout>
